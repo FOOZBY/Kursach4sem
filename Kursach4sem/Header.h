@@ -114,23 +114,26 @@ string won(cell** field, int n, int m, int x, int y)
 bool game_is_life()
 {
     system("cls");
+    int winXSize = 1000, winYSize = 800;
+    int cellSize = 100;
     int n = 3, m = 3, moves = 0;
     char first_player_char;
     while (true)
     {
-        cout << "Input n: ";
+        cout << "n*m must be equal or move than 5.\n";
+        cout << "Input n (1 - " << winYSize / cellSize << "): ";
         n = getnum();
-        cout << "Input m: ";
+        cout << "Input m (1 - " << winXSize / cellSize << "): ";
         m = getnum();
-        if (n * m >= 5)
+        if ((n > 0) && (n <= (winYSize / cellSize)) && (m > 0) && (m <= (winXSize / cellSize)) && ((n * m) >= 5))
             break;
-        cout << "n*m must be equal or move than 5, reepeat enter\n";
+        cout << "Error values of n and m! Repeat enter.\n";
     }
     cout << "Input First player char('X' if first is X and any other if O): ";
     cin >> first_player_char;
 
 
-    sf::RenderWindow window(sf::VideoMode(1000, 800), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode(winXSize, winYSize), "X0 Game!");
     
     bool first_player_move = 1;
     bool first_player_is_X = 1;
@@ -152,16 +155,16 @@ bool game_is_life()
     {
         for (int j = 0; j < m; j++)
         {
-            field[i][j].x = 100 * i;
-            field[i][j].y = 100 * j;
+            field[i][j].x = cellSize * j;
+            field[i][j].y = cellSize * i;
         }
     }
 
     while (window.isOpen())
     {
         Vector2i mousepos = Mouse::getPosition(window);
-        int mouse_x = mousepos.x / 100;
-        int mouse_y = mousepos.y / 100;
+        int mouse_i = mousepos.y / cellSize;
+        int mouse_j = mousepos.x / cellSize;
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -178,50 +181,46 @@ bool game_is_life()
                 {
                     if (event.key.code == Mouse::Left)
                     {
-                        if (mouse_x < n && mouse_y < m && mouse_y >-1 && mouse_x>-1 && !field[mouse_x][mouse_y].busy)
+                        if (mouse_i < n && mouse_j < m && mouse_j > -1 && mouse_i > -1 && !field[mouse_i][mouse_j].busy)
                         {
                             if (first_player_move)
                             {
                                 if (first_player_is_X)
-                                    field[mouse_x][mouse_y].is_X = 1;
+                                    field[mouse_i][mouse_j].is_X = 1;
                                 else
-                                    field[mouse_x][mouse_y].is_O = 1;
-                                field[mouse_x][mouse_y].busy = 1;
+                                    field[mouse_i][mouse_j].is_O = 1;
+                                field[mouse_i][mouse_j].busy = 1;
                             }
                             else
                             {
                                 if (first_player_is_X)
-                                    field[mouse_x][mouse_y].is_O = 1;
+                                    field[mouse_i][mouse_j].is_O = 1;
                                 else
-                                    field[mouse_x][mouse_y].is_X = 1;
-                                field[mouse_x][mouse_y].busy = 1;
+                                    field[mouse_i][mouse_j].is_X = 1;
+                                field[mouse_i][mouse_j].busy = 1;
                             }
                             first_player_move = !first_player_move;
                             moves++;
+
+                            if (won(field, n, m, mouse_i, mouse_j) == "X")
+                            {
+                                winner = "X";
+                                game = 0;
+                                break;
+                            }
+                            if (won(field, n, m, mouse_i, mouse_j) == "O")
+                            {
+                                winner = "O";
+                                game = 0;
+                                break;
+                            }
+                            if (moves == n * m)
+                            {
+                                winner = "draw";
+                                game = 0;
+                                break;
+                            }
                         }
-                    }
-                    else if (event.key.code == Mouse::Right)
-                    {
-                        if (mouse_x <= n && mouse_y <= m && mouse_y > -1 && mouse_x > -1)
-                            field[mouse_x][mouse_y].busy = 0;
-                    }
-                    if (won(field, n, m, mouse_x, mouse_y) == "X")
-                    {
-                        winner = "X";
-                        game = 0;
-                        break;
-                    }
-                    if (won(field, n, m, mouse_x, mouse_y) == "O")
-                    {
-                        winner = "O";
-                        game = 0;
-                        break;
-                    }
-                    if (moves == n * m)
-                    {
-                        winner = "draw";
-                        game = 0;
-                        break;
                     }
                 }
                 break;
