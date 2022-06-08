@@ -4,6 +4,19 @@
 using namespace sf;
 using namespace std;
 
+int getnum()
+{
+    int value;
+    while (!(cin >> value))
+    { //Since value is a int, (cin >> value) will be true only if the user enters a valid value that can be put inside a int
+        cout << "Please enter a valid value:" << endl;
+        cin.clear();
+        cin.ignore(32767, '\n');
+    }
+    cin.ignore(32767, '\n');
+    return value;
+}
+
 struct cell
 {
     bool is_X = 0, is_O = 0;
@@ -100,15 +113,23 @@ string won(cell** field, int n, int m, int x, int y)
 
 bool game_is_life()
 {
+    system("cls");
     int n = 3, m = 3, moves = 0;
     char first_player_char;
-    cin.clear();
-    cout << "Input n: ";
-    cin >> n;
-    cout << "Input m: ";
-    cin >> m;
-    cout << "Input First player char: ";
+    while (true)
+    {
+        cout << "Input n: ";
+        n = getnum();
+        cout << "Input m: ";
+        m = getnum();
+        if (n * m >= 5)
+            break;
+        cout << "n*m must be equal or move than 5, reepeat enter\n";
+    }
+    cout << "Input First player char('X' if first is X and any other if O): ";
     cin >> first_player_char;
+
+
     sf::RenderWindow window(sf::VideoMode(1000, 800), "SFML works!");
     
     bool first_player_move = 1;
@@ -118,8 +139,8 @@ bool game_is_life()
     bool game = 1;
     string winner;
 
-    Texture texture;
-    Sprite sprite, winsprite, buttonsprite;
+    Texture texture, wintexture;
+    Sprite sprite, winsprite;
 
     cell** field = new cell * [n];
     for (int i = 0; i < n; i++)
@@ -135,15 +156,6 @@ bool game_is_life()
             field[i][j].y = 100 * j;
         }
     }
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < m; j++)
-        {
-            cout << field[i][j].x << "\t";
-            cout << field[i][j].y << endl;
-        }
-    }
-
 
     while (window.isOpen())
     {
@@ -153,11 +165,17 @@ bool game_is_life()
         sf::Event event;
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
-                window.close();
-            if (game)
+            switch (event.type)
             {
-                if (event.type == Event::MouseButtonPressed)
+            case Event::Closed:
+            {
+                window.close();
+                break;
+            }
+            case Event::MouseButtonPressed:
+            {
+                if (game)
+                {
                     if (event.key.code == Mouse::Left)
                     {
                         if (mouse_x < n && mouse_y < m && mouse_y >-1 && mouse_x>-1 && !field[mouse_x][mouse_y].busy)
@@ -187,25 +205,29 @@ bool game_is_life()
                         if (mouse_x <= n && mouse_y <= m && mouse_y > -1 && mouse_x > -1)
                             field[mouse_x][mouse_y].busy = 0;
                     }
-
-                if (won(field, n, m, mouse_x, mouse_y) == "X")
-                {
-                    winner = "X";
-                    game = 0;
-                    break;
+                    if (won(field, n, m, mouse_x, mouse_y) == "X")
+                    {
+                        winner = "X";
+                        game = 0;
+                        break;
+                    }
+                    if (won(field, n, m, mouse_x, mouse_y) == "O")
+                    {
+                        winner = "O";
+                        game = 0;
+                        break;
+                    }
+                    if (moves == n * m)
+                    {
+                        winner = "draw";
+                        game = 0;
+                        break;
+                    }
                 }
-                if (won(field, n, m, mouse_x, mouse_y) == "O")
-                {
-                    winner = "O";
-                    game = 0;
-                    break;
-                }
-                if (moves == n * m)
-                {
-                    winner = "draw";
-                    game = 0;
-                    break;
-                }
+                break;
+            }
+            default:
+                break;
             }
         }
 
@@ -231,18 +253,23 @@ bool game_is_life()
         }
         if (!game)
         {
-            if (winner == "X" && first_player_is_X)
-                texture.loadFromFile("firstplayerwon.png");
-            if (winner == "O" && first_player_is_X)
-                texture.loadFromFile("secondplayerwon.png");
+            if ((winner == "X" && first_player_is_X) || (winner == "O" && !first_player_is_X))
+                wintexture.loadFromFile("firstplayerwon.png");
+            if ((winner == "O" && first_player_is_X) || (winner == "X" && !first_player_is_X))
+                wintexture.loadFromFile("secondplayerwon.png");
             if (winner == "draw")
-                texture.loadFromFile("draw.png");
-            winsprite.setTexture(texture);
+                wintexture.loadFromFile("draw.png");
+            winsprite.setTexture(wintexture);
             winsprite.setPosition(200, 250);
             window.draw(winsprite);
         }
         window.display();
     }
+    for (int i = 0; i < n; i++)
+    {
+        delete[] field[n];
+    }
+    delete[] field;
 }
 
 void game_running()
